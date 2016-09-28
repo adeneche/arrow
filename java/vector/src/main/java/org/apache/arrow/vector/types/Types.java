@@ -511,6 +511,8 @@ public class Types {
   public static MinorType getMinorTypeForArrowType(ArrowType arrowType) {
     if (arrowType.getTypeType() == Type.Decimal) {
       return MinorType.DECIMAL;
+    } else if (arrowType.getTypeType() == Type.Union) {
+      return MinorType.UNION;
     }
     return ARROW_TYPE_MINOR_TYPE_MAP.get(arrowType);
   }

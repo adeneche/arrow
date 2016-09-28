@@ -18,12 +18,18 @@
 package org.apache.arrow.vector;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import org.apache.arrow.memory.BufferAllocator;
 import org.apache.arrow.vector.complex.UnionVector;
+import org.apache.arrow.vector.complex.impl.UnionReader;
+import org.apache.arrow.vector.complex.impl.UnionWriter;
 import org.apache.arrow.vector.holders.NullableUInt4Holder;
 import org.apache.arrow.vector.types.Types;
+import org.apache.arrow.vector.types.pojo.ArrowType;
+import org.apache.arrow.vector.types.pojo.Field;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -74,6 +80,38 @@ public class TestUnionVector {
 
       assertEquals(true, accessor.isNull(3));
     }
+  }
+
+  @Test
+  public void testUnionSchema() {
+    UnionVector vector = new UnionVector("union", allocator, null);
+    UnionWriter unionWriter = new UnionWriter(vector);
+    unionWriter.allocate();
+    for (int i = 0; i < 10; i++) {
+      unionWriter.setPosition(i);
+      if (i % 2 == 0) {
+        unionWriter.writeInt(i);
+      } else {
+        unionWriter.writeFloat4((float) i);
+      }
+    }
+    vector.getMutator().setValueCount(10);
+    UnionReader unionReader = new UnionReader(vector);
+    for (int i = 0; i < 10; i++) {
+      unionReader.setPosition(i);
+      if (i % 2 == 0) {
+        Assert.assertEquals(i, i, unionReader.readInteger());
+      } else {
+        Assert.assertEquals((float) i, unionReader.readFloat(), 1e-12);
+      }
+    }
+
+
+    Field field = vector.getField();
+    ArrowType arrowType = field.getType();
+    assertEquals(Types.MinorType.UNION, Types.getMinorTypeForArrowType(arrowType));
+
+    vector.close();
   }
 
 }
