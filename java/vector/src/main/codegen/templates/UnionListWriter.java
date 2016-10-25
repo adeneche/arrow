@@ -134,6 +134,7 @@ public class UnionListWriter extends AbstractFieldWriter {
   @Override
   public void startList() {
     vector.getMutator().startNewValue(idx());
+    writer.setPosition(offsets.getAccessor().get(idx() + 1));
   }
 
   @Override
